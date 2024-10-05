@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: receiver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: receiver
+  template:
+    metadata:
+      labels:
+        app: receiver
+    spec:
+      containers:
+      - name: receiver-container
+        image: receiver-kube:latest  # You will need to build and push this image to a registry
+        imagePullPolicy: IfNotPresent  # Use the local image if available
+        ports:
+        - containerPort: 8001
+        command: ["python", "app.py"]
+        stdin: true
+        tty: true
+        readinessProbe:
+          tcpSocket:
+            port: 5672  # Wait until RabbitMQ is ready
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: receiver-service
+spec:
+  selector:
+    app: receiver
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+  type: ClusterIP

@@ -1,0 +1,35 @@
+version: "3.10"
+services:
+    rabbitmq:
+        hostname: "rabbitmq"
+        image: "rabbitmq:3-management"
+        container_name: "rabbitmq"
+        ports: 
+            - "5672:5672"
+            - "15672:15672"
+        stdin_open: true
+        tty: true
+
+    sender:
+        image: 'sender'
+        container_name: 'sender'
+        build: ./sender/
+        ports: 
+            - "8000:8000"
+        command: python app.py testing
+        stdin_open: true
+        tty: true
+        depends_on: 
+            - "rabbitmq"
+
+    receiver:
+        image: 'receiver'
+        container_name: 'receiver'
+        build: ./receiver/
+        ports: 
+            - "8001:8001"
+        command: python app.py
+        stdin_open: true
+        tty: true
+        depends_on: 
+            - "rabbitmq"
